@@ -6,7 +6,7 @@
 - `netlify/functions/api.js` : Proxy → เรียก Apps Script (แก้ CORS)
 - `netlify.toml` : คอนฟิก Netlify
 
-## ใช้งานแบบแยกโค้ด (แนะนำสำหรับทำงานเป็นทีม)
+## ใช้งานแบบแยกโค้ด 
 1) **Deploy Apps Script** เป็น Web App → ได้ URL `/exec`
 2) ขึ้น Netlify (ต่อ Git repo โปรเจ็กต์นี้)
 3) ตั้ง Environment variable ใน Netlify: `APPS_SCRIPT_URL=<URL /exec>`
