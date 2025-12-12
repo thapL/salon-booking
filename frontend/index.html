@@ -148,8 +148,29 @@
         </div>
       </section>
     </main>
+    <!-- ===================== POPUP จองคิว ===================== -->
+    <div id="bookingModal" class="modal" aria-hidden="true">
+      <div class="modal-box">
 
+        <h2 id="popupDate" class="popup-title">เลือกบริการ</h2>
 
+        <div class="section">
+          <h3>เวลาว่าง</h3>
+          <div id="popupTimes" class="popup-times"></div>
+        </div>
+
+        <div class="section">
+          <h3>บริการ</h3>
+          <div id="popupServices" class="popup-services"></div>
+        </div>
+
+        <div class="actions">
+          <button id="closePopup" class="btn">ยกเลิก</button>
+          <button id="confirmPopup" class="btn btn-primary" disabled>ยืนยันการจอง</button>
+        </div>
+
+      </div>
+    </div>
     <div id="toast" class="toast"></div>
     <script src="js/index.js"></script>
   </body>
