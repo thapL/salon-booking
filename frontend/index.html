@@ -1,177 +1,122 @@
 <!DOCTYPE html>
 <html lang="th">
-  <head>
-    <meta charset="utf-8" />
-    <title>ร้านทำผม | จองคิวออนไลน์</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="css/index.css" />
-  </head>
-  <body>
-    <button id="themeToggle" class="theme-toggle">🌙</button>
+<head>
+  <meta charset="utf-8" />
+  <title>ร้านทำผม | จองคิวออนไลน์</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/index.css" />
+</head>
+<body>
 
-    <header class="hero">
-      <div class="container hero-inner hero-3col">
-        <div class="hero-col hero-logo-col">
-          <div class="hero-logo-circle">
-            <img
-              src="img/logo.jpg"
-              alt="Salon Logo"
-              style="
-                width: 200px;
-                height: 200px;
-                object-fit: cover;
-                border-radius: 50%;
-              "
-            />
-          </div>
-        </div>
+<button id="themeToggle" class="theme-toggle">🌙</button>
 
-        <div class="hero-col hero-text-col">
-          <span class="tag">Hair • Style • Care</span>
-          <h3>
-            📍 ร้านอยู่พระโขนงค่ะ<br />
-            เดินทางสะดวกมาก เพียง 900 เมตร<br />
-            จาก BTS พระโขนง<br />
-            แวะมาตัดผมได้เลยค่ะ ☁️✂️
-          </h3>
-          <p class="lead">ตรวจวันว่าง เลือกเวลา แล้วกดยืนยันได้เลย</p>
+<header class="hero">
+  <div class="container hero-inner hero-3col">
 
-          <div class="cta">
-            <a class="btn" href="#booking">จองคิวตอนนี้</a>
-            <a class="btn" href="#services">บริการและราคา</a>
-          </div>
-        </div>
+    <div class="hero-col hero-logo-col">
+      <img src="img/logo.jpg" style="width:200px;height:200px;border-radius:50%;" />
+    </div>
 
-        <div class="hero-col hero-slider-col">
-          <div class="card hero-img slider">
-            <div class="slide-viewport">
-              <div class="slides">
-                <img src="img/pn.jpg" />
-                <img src="img/pn.jpg" />
-                <img src="img/pn.jpg" />
-              </div>
-            </div>
-            <button class="slide-btn prev">‹</button>
-            <button class="slide-btn next">›</button>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <main class="container">
-      <section id="services" class="section">
-        <h2>บริการยอดนิยม</h2>
-        <div class="grid3">
-          <div class="card svc">
-            <h3>ตัดผม</h3>
-            <p class="muted">ทรงตามใจ</p>
-            <div class="price">เริ่ม 250฿</div>
-          </div>
-          <div class="card svc">
-            <h3>ทำสี</h3>
-            <p class="muted">แฟชั่น/ธรรมชาติ</p>
-            <div class="price">เริ่ม 1,200฿</div>
-          </div>
-          <div class="card svc">
-            <h3>ทรีตเมนต์</h3>
-            <p class="muted">ฟื้นฟูเส้นผม</p>
-            <div class="price">เริ่ม 890฿</div>
-          </div>
-        </div>
-      </section>
-
-      <section id="booking" class="section">
-        <h2>เช็ควันว่างและจองคิว</h2>
-        <div class="cal-wrap">
-          <div class="card calendar">
-            <div class="cal-head">
-              <button class="btn" id="prevMonth">←</button>
-              <strong id="monthLabel">เดือน ปี</strong>
-              <button class="btn" id="nextMonth">→</button>
-            </div>
-            <div class="cal-grid">
-              <div class="dow">อา</div>
-              <div class="dow">จ</div>
-              <div class="dow">อ</div>
-              <div class="dow">พ</div>
-              <div class="dow">พฤ</div>
-              <div class="dow">ศ</div>
-              <div class="dow">ส</div>
-            </div>
-            <div class="cal-grid" id="calGrid"></div>
-            <div class="legend"><span class="dot"></span> มีคิวว่าง</div>
-            <div id="apiMsg" class="muted small"></div>
-          </div>
-
-          <div class="card side">
-            <h3>รายละเอียดการจอง</h3>
-            <div id="selectedDate" class="muted">ยังไม่ได้เลือกวันที่</div>
-            <div class="spacer"></div>
-            <div class="muted subtitle">เลือกเวลา</div>
-            <div id="times" class="times"></div>
-            <div class="spacer"></div>
-
-            <form id="bookForm" class="form">
-              <label>ชื่อ–นามสกุล</label>
-              <input id="name" required placeholder="เช่น สุชาดา ใจดี" />
-              <label>เบอร์โทร</label>
-              <input id="phone" required placeholder="0812345678" />
-              <label>อีเมล (ถ้ามี)</label>
-              <input id="email" type="email" placeholder="example@mail.com" />
-              <label>หมายเหตุ</label>
-              <textarea
-                id="notes"
-                rows="3"
-                placeholder="รายละเอียดเพิ่มเติม"
-              ></textarea>
-              <div class="spacer"></div>
-              <div class="upload-wrap">
-                <input type="file" id="attachImg" accept="image/*" hidden>
-                <button type="button" class="btn attach-btn" id="attachBtn">📎 แนบรูปภาพ</button>
-              <div id="serviceModal" class="modal-overlay" aria-hidden="true">
-                <div class="modal-box">
-                  <h2>เลือกบริการ</h2>
-
-                  <div id="serviceList" class="service-list"></div>
-                  <div style="height:12px"></div>
-                  <div style="display:flex;gap:10px;align-items:center;">
-                    <button id="cancelService" class="btn">ยกเลิก</button>
-                    <button id="confirmService" class="btn btn-primary" disabled>ยืนยันการจอง</button>
-                  </div>
-                </div>
-              </div>
-              </div>
-              <div id="imgPreview" class="img-preview"></div>
-              <div id="formMsg" class="muted"></div>
-            </form>
-          </div>
-        </div>
-      </section>
-    </main>
-    <!-- ===================== POPUP จองคิว ===================== -->
-    <div id="bookingModal" class="modal" aria-hidden="true">
-      <div class="modal-box">
-
-        <h2 id="popupDate" class="popup-title">เลือกบริการ</h2>
-
-        <div class="section">
-          <h3>เวลาว่าง</h3>
-          <div id="popupTimes" class="popup-times"></div>
-        </div>
-
-        <div class="section">
-          <h3>บริการ</h3>
-          <div id="popupServices" class="popup-services"></div>
-        </div>
-
-        <div class="actions">
-          <button id="closePopup" class="btn">ยกเลิก</button>
-          <button id="confirmPopup" class="btn btn-primary" disabled>ยืนยันการจอง</button>
-        </div>
-
+    <div class="hero-col hero-text-col">
+      <span class="tag">Hair • Style • Care</span>
+      <h3>
+        📍 ร้านอยู่พระโขนง<br>
+        ใกล้ BTS พระโขนง 900 เมตร ✂️
+      </h3>
+      <p class="lead">ตรวจวันว่าง → เลือกเวลา → ยืนยันการจอง</p>
+      <div class="cta">
+        <a class="btn" href="#booking">จองคิวตอนนี้</a>
+        <a class="btn" href="#services">บริการและราคา</a>
       </div>
     </div>
-    <div id="toast" class="toast"></div>
-    <script src="js/index.js"></script>
-  </body>
+
+    <div class="hero-col hero-slider-col">
+      <div class="card hero-img slider">
+        <div class="slide-viewport">
+          <div class="slides">
+            <img src="img/pn.jpg">
+            <img src="img/pn.jpg">
+            <img src="img/pn.jpg">
+          </div>
+        </div>
+        <button class="slide-btn prev">‹</button>
+        <button class="slide-btn next">›</button>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+<main class="container">
+
+<section id="services" class="section">
+  <h2>บริการยอดนิยม</h2>
+  <div class="grid3">
+    <div class="card svc">ตัดผม <div class="price">250฿</div></div>
+    <div class="card svc">ทำสี <div class="price">1200฿</div></div>
+    <div class="card svc">ทรีตเมนต์ <div class="price">890฿</div></div>
+  </div>
+</section>
+
+<section id="booking" class="section">
+  <h2>เช็ควันว่างและจองคิว</h2>
+
+  <div class="cal-wrap">
+    <div class="card calendar">
+
+      <div class="cal-head">
+        <button id="prevMonth" class="btn">←</button>
+        <strong id="monthLabel">เดือน ปี</strong>
+        <button id="nextMonth" class="btn">→</button>
+      </div>
+
+      <div class="cal-grid">
+        <div class="dow">อา</div><div class="dow">จ</div><div class="dow">อ</div>
+        <div class="dow">พ</div><div class="dow">พฤ</div><div class="dow">ศ</div><div class="dow">ส</div>
+      </div>
+
+      <div class="cal-grid" id="calGrid"></div>
+
+      <div class="legend">
+        <span class="dot"></span> มีคิวว่าง
+      </div>
+
+      <div id="apiMsg" class="muted small"></div>
+    </div>
+  </div>
+
+</section>
+
+</main>
+
+<!-- ===== POPUP BOOKING ===== -->
+<div id="bookingModal" class="modal">
+  <div class="modal-box">
+
+    <h2 id="popupDate">วันที่</h2>
+
+    <div class="section">
+      <h3>เลือกเวลา</h3>
+      <div id="popupTimes" class="popup-times"></div>
+    </div>
+
+    <div class="section">
+      <h3>เลือกบริการ</h3>
+      <div id="popupServices" class="popup-services"></div>
+    </div>
+
+    <div class="actions">
+      <button id="closePopup" class="btn">ยกเลิก</button>
+      <button id="confirmPopup" class="btn btn-primary" disabled>
+        ยืนยันการจอง
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="js/index.js"></script>
+</body>
 </html>

@@ -11,8 +11,10 @@ const SERVICES = [
 ];
 
 const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
 const pad = (n) => (n < 10 ? "0" + n : "" + n);
 
+/* ===================== STATE ===================== */
 let availableDates = new Set();
 let viewYear, viewMonth;
 
@@ -47,27 +49,47 @@ function setMonthLabel(y, m) {
 
 function renderCalendar() {
   const grid = $("#calGrid");
+  if (!grid) return;
   grid.innerHTML = "";
 
   const first = new Date(viewYear, viewMonth, 1);
   const start = first.getDay();
   const days = new Date(viewYear, viewMonth + 1, 0).getDate();
 
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
   setMonthLabel(viewYear, viewMonth);
 
-  for (let i = 0; i < start; i++) grid.appendChild(document.createElement("div"));
+  // ช่องว่างก่อนวันแรก
+  for (let i = 0; i < start; i++) {
+    grid.appendChild(document.createElement("div"));
+  }
 
   for (let d = 1; d <= days; d++) {
     const dateObj = new Date(viewYear, viewMonth, d);
+    const dateStr = `${dateObj.getFullYear()}-${pad(dateObj.getMonth()+1)}-${pad(d)}`;
+
     const el = document.createElement("button");
+    el.type = "button";
     el.className = "day";
     el.textContent = d;
 
-    const dateStr = `${dateObj.getFullYear()}-${pad(dateObj.getMonth()+1)}-${pad(d)}`;
+    if (dateObj < today) {
+      el.classList.add("muted");
+    }
 
     if (availableDates.has(dateStr)) {
       el.classList.add("available");
-      el.onclick = () => openBookingPopup(dateStr);
+      el.onclick = () => {
+        $$(".day").forEach(x => x.classList.remove("selected"));
+        el.classList.add("selected");
+        openBookingPopup(dateStr);
+      };
+    }
+
+    if (dateObj.getTime() === today.getTime()) {
+      el.classList.add("today");
     }
 
     grid.appendChild(el);
@@ -80,23 +102,15 @@ async function reloadDates() {
 
   try {
     const arr = await fetchDates();
-
-    // fallback กันพัง
     availableDates = new Set(Array.isArray(arr) ? arr : []);
-
-    if (apiMsg)
-      apiMsg.textContent = `พบวันว่าง ${availableDates.size} วัน`;
-
-    // 👉 สำคัญ
-    renderCalendar();
+    if (apiMsg) apiMsg.textContent = `พบวันว่าง ${availableDates.size} วัน`;
   } catch (e) {
     console.error(e);
-    if (apiMsg) apiMsg.textContent = "โหลดวันว่างไม่สำเร็จ";
-
-    // 👉 ให้ calendar ยังแสดงได้แม้ API ล้ม
     availableDates = new Set();
-    renderCalendar();
+    if (apiMsg) apiMsg.textContent = "โหลดวันว่างไม่สำเร็จ";
   }
+
+  renderCalendar();
 }
 
 /* ===================== POPUP ===================== */
@@ -107,6 +121,7 @@ function openBookingPopup(dateStr) {
 
   $("#popupDate").textContent = `วันที่ ${dateStr}`;
   $("#bookingModal").classList.add("show");
+  $("#bookingModal").setAttribute("aria-hidden", "false");
 
   loadPopupTimes(dateStr);
   renderServices();
@@ -115,11 +130,13 @@ function openBookingPopup(dateStr) {
 
 function closeBookingPopup() {
   $("#bookingModal").classList.remove("show");
+  $("#bookingModal").setAttribute("aria-hidden", "true");
 }
 
 async function loadPopupTimes(dateStr) {
   const box = $("#popupTimes");
   box.innerHTML = "กำลังโหลด...";
+
   try {
     const times = await fetchTimes(dateStr);
     box.innerHTML = "";
@@ -131,6 +148,7 @@ async function loadPopupTimes(dateStr) {
 
     times.forEach(t => {
       const b = document.createElement("button");
+      b.type = "button";
       b.textContent = t;
       b.onclick = () => {
         selectedTime = t;
@@ -141,15 +159,17 @@ async function loadPopupTimes(dateStr) {
       box.appendChild(b);
     });
   } catch {
-    box.innerHTML = "โหลดเวลาไม่สำเร็จ";
+    box.innerHTML = `<span class="muted">โหลดเวลาไม่สำเร็จ</span>`;
   }
 }
 
 function renderServices() {
   const box = $("#popupServices");
   box.innerHTML = "";
+
   SERVICES.forEach(s => {
     const b = document.createElement("button");
+    b.type = "button";
     b.textContent = `${s.name} — ${s.price}฿`;
     b.onclick = () => {
       selectedService = s;
@@ -168,10 +188,13 @@ function updateConfirmState() {
 /* ===================== THEME ===================== */
 function initTheme() {
   const toggle = $("#themeToggle");
+  if (!toggle) return;
+
   if (localStorage.getItem("theme") === "dark") {
     document.documentElement.classList.add("dark");
     toggle.textContent = "☀️";
   }
+
   toggle.onclick = () => {
     const isDark = document.documentElement.classList.toggle("dark");
     toggle.textContent = isDark ? "☀️" : "🌙";
@@ -182,7 +205,8 @@ function initTheme() {
 /* ===================== SLIDER ===================== */
 function initSlider() {
   const slides = document.querySelector(".slides");
-  if (!slides) return;
+  if (!slides || slides.children.length === 0) return;
+
   let idx = 0;
   setInterval(() => {
     idx = (idx + 1) % slides.children.length;
@@ -202,11 +226,20 @@ document.addEventListener("DOMContentLoaded", () => {
   reloadDates();
 
   $("#prevMonth").onclick = () => {
-    viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+    viewMonth--;
+    if (viewMonth < 0) {
+      viewMonth = 11;
+      viewYear--;
+    }
     renderCalendar();
   };
+
   $("#nextMonth").onclick = () => {
-    viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+    viewMonth++;
+    if (viewMonth > 11) {
+      viewMonth = 0;
+      viewYear++;
+    }
     renderCalendar();
   };
 
