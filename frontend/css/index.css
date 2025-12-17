@@ -299,7 +299,7 @@ h1 {
 
 .day.selected {
   background: var(--primary);
-  color: #fff;
+  color: #0f172a;
   border-color: var(--primary);
 }
 
