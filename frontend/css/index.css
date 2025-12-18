@@ -1037,7 +1037,6 @@ textarea {
 
 /* =====================================================
    🔥 HERO MOBILE FIX (CRITICAL)
-   แก้ hero พังบนมือถือ
 ===================================================== */
 @media (max-width: 768px) {
   .hero {
@@ -1147,12 +1146,6 @@ textarea {
   letter-spacing: 0.3px;
 }
 
-/* TikTok แยกนิดหน่อย */
-.social-card.tiktok {
-  background: #f8fafc;
-  border-color: #d8dde3;
-}
-
 /* ===== DARK MODE ===== */
 .dark .social-card {
   background: #1e293b;
@@ -1171,17 +1164,12 @@ textarea {
   flex-shrink: 0;
 }
 
-/* TikTok สีดำ / ขาวอัตโนมัติ */
-.social-card.tiktok {
-  color: #111;
-}
-
 .dark .social-card.tiktok {
   color: #f8fafc;
 }
 
 .social-card.line {
-  border-color: #06c755;
+  border-color: #f8fafc;
 }
 
 .social-card.line:hover {
