@@ -602,13 +602,10 @@ function applyLanguage(lang) {
 document.addEventListener("DOMContentLoaded", () => {
   const langBtn = document.getElementById("langToggle");
 
-  // โหลดภาษาไทยทันที
   applyLanguage("th");
 
-  // กันพัง เผื่อปุ่มไม่มี
   if (!langBtn) return;
 
-  // ปุ่มสลับภาษา
   langBtn.addEventListener("click", () => {
     applyLanguage(currentLang === "th" ? "en" : "th");
   });
