@@ -54,7 +54,7 @@ const SERVICES = [
       {
         id: "highlight",
         name: "ไฮไลต์ผม (Design Color)",
-        price: "เริ่มต้น 1500",
+        price: 1500,
         note: "ติดต่อร้านก่อนจอง",
       },
     ],
@@ -231,6 +231,8 @@ function openBookingPopup(dateStr) {
   $("#popupDate").textContent = `วันที่ ${dateStr}`;
   $("#bookingModal").classList.add("show");
   $("#bookingModal").setAttribute("aria-hidden", "false");
+
+  clearPopupMessage();
 
   resetForm();
   loadPopupTimes(dateStr);
@@ -435,23 +437,53 @@ $("#confirmPopup")?.addEventListener("click", async () => {
     amount: Number(selectedService?.price || 0),
     slipDataUrl,
   };
+let success = false;
 
-  try {
-    $("#confirmPopup").disabled = true;
-    toast("กำลังบันทึก...");
+try {
+  $("#confirmPopup").disabled = true;
 
-    const res = await postJSON("/api/book", payload);
+  // ล้างข้อความเก่า
+  clearPopupMessage();
 
-    console.log("BOOK OK:", res);
-    toast("บันทึกการจองเรียบร้อย");
+  // แสดงสถานะกำลังโหลด (ใน popup)
+  showPopupMessage(
+    "info",
+    i18n.bookingLoad[currentLang]
+  );
+
+  const res = await postJSON("/api/book", payload);
+
+  console.log("BOOK OK:", res);
+
+  // ✅ สำเร็จ
+  showPopupMessage(
+    "success",
+    i18n.bookingSuccess[currentLang]
+  );
+
+  success = true;
+
+  // ปิด popup หลังจากโชว์ข้อความ
+  setTimeout(async () => {
     closeBookingPopup();
     await reloadDates();
-  } catch (err) {
-    console.error(err);
-    toast(`บันทึกไม่สำเร็จ: ${err.message}`);
-  } finally {
+  }, 1200);
+
+} catch (err) {
+  console.error(err);
+
+  // ❌ ไม่สำเร็จ (2 ภาษา)
+  const msg =
+    i18n.bookingFail[currentLang] ||
+    "Booking failed";
+
+  showPopupMessage("error", msg);
+
+} finally {
+  if (!success) {
     $("#confirmPopup").disabled = false;
   }
+}
 });
 
 /* ===================== THEME ===================== */
@@ -487,7 +519,7 @@ function initSlider() {
 document.addEventListener("DOMContentLoaded", () => {
   initTheme();
   initSlider();
-  initPopupAttach(); // ✅ เรียกครั้งเดียวพอ
+  initPopupAttach();
 
   const now = new Date();
   viewYear = now.getFullYear();
@@ -539,44 +571,67 @@ document.addEventListener("DOMContentLoaded", () => {
 /* ===================== LANGUAGE TOGGLE ===================== */
 let currentLang = "th";
 
-const langBtn = document.getElementById("langToggle");
+const i18n = {
+  bookingFail: {
+    th: "จองคิวไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    en: "Booking failed. Please try again."
+  },
+  bookingSuccess: {
+    th: "จองคิวสำเร็จ",
+    en: "Booking successful"
+  },
+  bookingLoad: {
+    th: "กำลังบันทึก...",
+    en: "Booking Loading..."
+  }
+};
 
 function applyLanguage(lang) {
   document.querySelectorAll("[data-th]").forEach((el) => {
     el.innerHTML = el.dataset[lang];
   });
 
-  langBtn.textContent = lang === "th" ? "EN" : "TH";
+  const langBtn = document.getElementById("langToggle");
+  if (langBtn) {
+    langBtn.textContent = lang === "th" ? "EN" : "TH";
+  }
+
   currentLang = lang;
 }
 
-// ✅ โหลดภาษาไทยทันทีเมื่อหน้าเว็บเสร็จ
 document.addEventListener("DOMContentLoaded", () => {
+  const langBtn = document.getElementById("langToggle");
+
+  // โหลดภาษาไทยทันที
   applyLanguage("th");
-});
 
-// ✅ ปุ่มสลับภาษา
-langBtn.addEventListener("click", () => {
-  applyLanguage(currentLang === "th" ? "en" : "th");
-});
+  // กันพัง เผื่อปุ่มไม่มี
+  if (!langBtn) return;
 
-<<<<<<< HEAD
-function showToast(message, duration = 2500) {
-  const toast = document.getElementById("toast");
-  toast.textContent = message;
-  toast.classList.add("show");
-
-  setTimeout(() => {
-    toast.classList.remove("show");
-  }, duration);
-=======
-/* ===================== SAVE IMAGE SLIP ===================== */
-function fileToDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const fr = new FileReader();
-    fr.onload = () => resolve(String(fr.result || ""));
-    fr.onerror = reject;
-    fr.readAsDataURL(file);
+  // ปุ่มสลับภาษา
+  langBtn.addEventListener("click", () => {
+    applyLanguage(currentLang === "th" ? "en" : "th");
   });
->>>>>>> dc51e17a85f4d62acb8055a74bd970edf631e056
+});
+
+function showPopupMessage(type, text) {
+  console.log("SHOW POPUP MESSAGE:", type, text);
+
+  const box = document.getElementById("popupMessage");
+  if (!box) {
+    console.error("popupMessage not found");
+    return;
+  }
+
+  box.className = `popup-message ${type}`;
+  box.textContent = text;
+  box.classList.remove("hidden");
 }
+
+function clearPopupMessage() {
+  const box = document.getElementById("popupMessage");
+  if (!box) return;
+  box.textContent = "";
+  box.className = "popup-message hidden";
+}
+
