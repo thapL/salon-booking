@@ -96,6 +96,22 @@ app.post("/api/book", async (req, res) => {
     res.status(500).json({ ok: false, msg: "proxy-error" });
   }
 });
+app.get("/api/styles", async (req, res) => {
+  try {
+    const r = await appFetch(`${APPS_SCRIPT_URL}?action=styles`, {
+      cache: "no-store",
+    });
+    if (!r.ok)
+      return res
+        .status(502)
+        .json({ ok: false, msg: `apps-script ${r.status}` });
+
+    res.json(await r.json());
+  } catch (e) {
+    console.error("styles fetch error:", e.message);
+    res.status(500).json({ ok: false, msg: "proxy-error" });
+  }
+});
 
 // serve frontend
 const frontendDir = path.join(__dirname, "frontend");

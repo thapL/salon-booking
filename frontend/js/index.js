@@ -1,8 +1,15 @@
 /* ===================== CONFIG ===================== */
+const GAS_EXEC =
+  "https://script.google.com/macros/s/AKfycbyzZFgiLAnKJ2nd1Mg7OdtXyMR27TV-C0_FDYLR9FR3wlIeIqGij_woIhCWg_psSW0q/exec";
+
 const API = {
-  dates: "/api/dates",
-  times: (d) => `/api/times?date=${encodeURIComponent(d)}`,
-  styles: "/api/styles",
+  dates: `${GAS_EXEC}?action=dates`,
+  times: (d) => `${GAS_EXEC}?action=times&date=${encodeURIComponent(d)}`,
+  styles: `${GAS_EXEC}?action=styles`,
+
+  // ถ้าคุณยิงจองผ่าน /api/book (มี backend/proxy อยู่แล้ว) ก็ปล่อยเหมือนเดิม
+  // แต่ถ้าจะยิงไป Apps Script ตรง ๆ ให้ใช้ GAS_EXEC
+  book: "/api/book",
 };
 
 // ✅ ใช้เป็น fallback ถ้าโหลดจากชีทไม่สำเร็จ
@@ -96,8 +103,15 @@ function toast(msg) {
 /* ===================== FETCH ===================== */
 async function j(url) {
   const r = await fetch(url);
-  if (!r.ok) throw new Error("network");
-  return r.json();
+  const text = await r.text();
+
+  if (!r.ok) throw new Error(`HTTP ${r.status}: ${text.slice(0, 120)}`);
+
+  if (text.trim().startsWith("<")) {
+    throw new Error(`API คืน HTML ไม่ใช่ JSON: ${text.slice(0, 80)}`);
+  }
+
+  return JSON.parse(text);
 }
 
 const fetchDates = () => j(API.dates);
