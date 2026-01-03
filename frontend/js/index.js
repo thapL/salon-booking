@@ -2,88 +2,49 @@
 const API = {
   dates: "/api/dates",
   times: (d) => `/api/times?date=${encodeURIComponent(d)}`,
+  styles: "/api/styles",
 };
 
-const SERVICES = [
+// ✅ ใช้เป็น fallback ถ้าโหลดจากชีทไม่สำเร็จ
+const DEFAULT_SERVICES = [
   {
     category: "✂️ บริการตัดผม",
     items: [
-      {
-        id: "haircut",
-        name: "ตัดผม (รวมสระ + เซ็ตผม)",
-        price: 800,
-      },
-      {
-        id: "bang_trim",
-        name: "ตัดหน้าม้า (ไม่รวมสระ)",
-        price: 400,
-      },
-      {
-        id: "shampoo_style",
-        name: "สระผม + เซ็ทผม",
-        price: 400,
-      },
+      { id: "haircut", name: "ตัดผม (รวมสระ + เซ็ตผม)", price: 800 },
+      { id: "bang_trim", name: "ตัดหน้าม้า (ไม่รวมสระ)", price: 400 },
+      { id: "shampoo_style", name: "สระผม + เซ็ทผม", price: 400 },
     ],
   },
-
   {
     category: "🎨 ทำสีผม (ไม่ฟอก)",
     items: [
-      {
-        id: "color_no_bleach",
-        name: "ทำสีผม (ไม่ฟอก)",
-        price: 1500,
-      },
-      {
-        id: "root_touchup",
-        name: "เติมโคนผม (ไม่ฟอก)",
-        price: 1300,
-      },
+      { id: "color_no_bleach", name: "ทำสีผม (ไม่ฟอก)", price: 1500 },
+      { id: "root_touchup", name: "เติมโคนผม (ไม่ฟอก)", price: 1300 },
     ],
   },
-
   {
     category: "⚡️ ฟอก & สีพิเศษ",
     items: [
-      {
-        id: "bleach",
-        name: "ฟอกผม",
-        price: 2000,
-        note: "ติดต่อร้านก่อนจอง",
-      },
+      { id: "bleach", name: "ฟอกผม", price: 2000, note: "ติดต่อร้านก่อนจอง" },
       {
         id: "highlight",
         name: "ไฮไลต์ผม (Design Color)",
-        price: 1500,
+        price: "เริ่มต้น 1500",
         note: "ติดต่อร้านก่อนจอง",
       },
     ],
   },
-
   {
     category: "💆🏻‍♀️ ดูแลเส้นผม",
     items: [
-      {
-        id: "head_spa",
-        name: "สปาหัว",
-        price: 1000,
-      },
-      {
-        id: "treatment",
-        name: "ทรีตเมนท์",
-        price: 1000,
-      },
+      { id: "head_spa", name: "สปาหัว", price: 1000 },
+      { id: "treatment", name: "ทรีตเมนท์", price: 1000 },
     ],
   },
-
   {
     category: "🌈 Set Menu",
     items: [
-      {
-        id: "set_color_cut",
-        name: "ทำสี (ไม่ฟอก) + ตัดผม",
-        price: 2300,
-      },
+      { id: "set_color_cut", name: "ทำสี (ไม่ฟอก) + ตัดผม", price: 2300 },
       {
         id: "set_full_bleach_color",
         name: "ฟอกทั้งหัว + ลงสี",
@@ -99,6 +60,9 @@ const SERVICES = [
     ],
   },
 ];
+
+// ✅ จะถูก override ด้วยข้อมูลจากชีทถ้าโหลดสำเร็จ
+let SERVICES = DEFAULT_SERVICES;
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
@@ -138,6 +102,69 @@ async function j(url) {
 
 const fetchDates = () => j(API.dates);
 const fetchTimes = (d) => j(API.times(d));
+const fetchStyles = () => j(API.styles);
+
+/* ===================== SERVICES FROM SHEET ===================== */
+function groupStylesToServices(styles) {
+  const map = new Map();
+
+  (Array.isArray(styles) ? styles : []).forEach((s) => {
+    const category = String(s.category || "อื่นๆ").trim();
+    const name = String(s.styleName || "").trim();
+    if (!name) return;
+
+    if (!map.has(category)) map.set(category, []);
+
+    map.get(category).push({
+      id: name, // ถ้ายังไม่มีคอลัมน์ ID ใช้ชื่อไปก่อน
+      name,
+      price: s.price, // อาจเป็น number/string ได้
+      durationMin: Number(s.durationMin || 0),
+      note: "", // ถ้าจะมี note ให้เพิ่มคอลัมน์ในชีทแล้วเติมตรงนี้ได้
+    });
+  });
+
+  return [...map.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([category, items]) => ({
+      category,
+      items: items.sort((x, y) => x.name.localeCompare(y.name)),
+    }));
+}
+
+async function reloadServicesFromSheet() {
+  try {
+    const styles = await fetchStyles();
+    const grouped = groupStylesToServices(styles);
+
+    // ถ้าโหลดได้จริงและมีข้อมูล -> ใช้ของชีท
+    if (Array.isArray(grouped) && grouped.length > 0) {
+      SERVICES = grouped;
+      return true;
+    }
+
+    // ถ้า API คืนว่าง -> fallback
+    SERVICES = DEFAULT_SERVICES;
+    return false;
+  } catch (e) {
+    console.error(e);
+    SERVICES = DEFAULT_SERVICES; // fallback
+    toast("โหลดรายการบริการจากชีทไม่สำเร็จ (ใช้ค่าตั้งต้น)");
+    return false;
+  }
+}
+
+function formatPrice(p) {
+  if (typeof p === "number") return `${p.toLocaleString()}฿`;
+  const t = String(p ?? "").trim();
+  return t ? t : "-";
+}
+
+function getPriceNumber(p) {
+  if (typeof p === "number") return p;
+  const n = parseFloat(String(p || "").replace(/[^\d.]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
 
 /* ===================== CALENDAR ===================== */
 function setMonthLabel(y, m) {
@@ -232,8 +259,6 @@ function openBookingPopup(dateStr) {
   $("#bookingModal").classList.add("show");
   $("#bookingModal").setAttribute("aria-hidden", "false");
 
-  clearPopupMessage();
-
   resetForm();
   loadPopupTimes(dateStr);
   renderServices();
@@ -262,7 +287,6 @@ function resetForm() {
   $("#popupNotes") && ($("#popupNotes").value = "");
   $("#popupImgPreview") && ($("#popupImgPreview").innerHTML = "");
 
-  // ล้าง active service
   $("#popupServices")
     ?.querySelectorAll(".service-item")
     .forEach((b) => b.classList.remove("active"));
@@ -300,16 +324,16 @@ async function loadPopupTimes(dateStr) {
 
 function renderServices() {
   const box = $("#popupServices");
+  if (!box) return;
+
   box.innerHTML = "";
 
   SERVICES.forEach((group) => {
-    /* ===== หัวข้อหมวด ===== */
     const title = document.createElement("div");
     title.className = "service-category";
     title.textContent = group.category;
     box.appendChild(title);
 
-    /* ===== รายการบริการ ===== */
     group.items.forEach((s) => {
       const b = document.createElement("button");
       b.type = "button";
@@ -318,7 +342,12 @@ function renderServices() {
       b.innerHTML = `
         <div class="svc-name">${s.name}</div>
         <div class="svc-meta">
-          <span class="svc-price">${s.price.toLocaleString()}฿</span>
+          <span class="svc-price">${formatPrice(s.price)}</span>
+          ${
+            s.durationMin
+              ? `<span class="svc-dur">${s.durationMin} นาที</span>`
+              : ""
+          }
         </div>
         ${s.note ? `<div class="svc-note">${s.note}</div>` : ""}
       `;
@@ -326,7 +355,6 @@ function renderServices() {
       b.onclick = () => {
         selectedService = s;
 
-        // ล้าง active ทุกปุ่ม
         box
           .querySelectorAll(".service-item")
           .forEach((x) => x.classList.remove("active"));
@@ -412,7 +440,6 @@ $("#confirmPopup")?.addEventListener("click", async () => {
   let slipDataUrl = "";
   try {
     if (customerData.image) {
-      // กันไฟล์ใหญ่มาก
       const maxMB = 2;
       if (customerData.image.size > maxMB * 1024 * 1024) {
         toast(`รูปใหญ่เกิน ${maxMB}MB กรุณาเลือกรูปที่เล็กลง`);
@@ -433,57 +460,30 @@ $("#confirmPopup")?.addEventListener("click", async () => {
     phone: customerData.phone,
     email: customerData.email,
     notes: customerData.notes,
+
+    // ✅ ส่งชื่อบริการให้ Apps Script (ของคุณอ่าน styleName/serviceName ได้ถ้าแก้ฝั่ง script แล้ว)
     serviceName: selectedService?.name,
-    amount: Number(selectedService?.price || 0),
+    amount: getPriceNumber(selectedService?.price),
+
     slipDataUrl,
   };
-let success = false;
 
-try {
-  $("#confirmPopup").disabled = true;
+  try {
+    $("#confirmPopup").disabled = true;
+    toast("กำลังบันทึก...");
 
-  // ล้างข้อความเก่า
-  clearPopupMessage();
+    const res = await postJSON("/api/book", payload);
 
-  // แสดงสถานะกำลังโหลด (ใน popup)
-  showPopupMessage(
-    "info",
-    i18n.bookingLoad[currentLang]
-  );
-
-  const res = await postJSON("/api/book", payload);
-
-  console.log("BOOK OK:", res);
-
-  // ✅ สำเร็จ
-  showPopupMessage(
-    "success",
-    i18n.bookingSuccess[currentLang]
-  );
-
-  success = true;
-
-  // ปิด popup หลังจากโชว์ข้อความ
-  setTimeout(async () => {
+    console.log("BOOK OK:", res);
+    toast("บันทึกการจองเรียบร้อย");
     closeBookingPopup();
     await reloadDates();
-  }, 1200);
-
-} catch (err) {
-  console.error(err);
-
-  // ❌ ไม่สำเร็จ (2 ภาษา)
-  const msg =
-    i18n.bookingFail[currentLang] ||
-    "Booking failed";
-
-  showPopupMessage("error", msg);
-
-} finally {
-  if (!success) {
+  } catch (err) {
+    console.error(err);
+    toast(`บันทึกไม่สำเร็จ: ${err.message}`);
+  } finally {
     $("#confirmPopup").disabled = false;
   }
-}
 });
 
 /* ===================== THEME ===================== */
@@ -515,16 +515,66 @@ function initSlider() {
   }, 5000);
 }
 
-/* ===================== INIT ===================== */
-document.addEventListener("DOMContentLoaded", () => {
+/* ===================== QR POPUP ===================== */
+function initQrPopup() {
+  const qrBtn = document.getElementById("popupQrBtn");
+  const qrModal = document.getElementById("qrModal");
+  const closeQr = document.getElementById("closeQr");
+
+  if (!qrBtn || !qrModal || !closeQr) return;
+
+  qrBtn.onclick = () => qrModal.classList.add("show");
+  closeQr.onclick = () => qrModal.classList.remove("show");
+}
+
+/* ===================== LANGUAGE TOGGLE ===================== */
+let currentLang = "th";
+
+function applyLanguage(lang) {
+  document.querySelectorAll("[data-th]").forEach((el) => {
+    el.innerHTML = el.dataset[lang];
+  });
+  currentLang = lang;
+}
+
+function initLanguageToggle() {
+  const langBtn = document.getElementById("langToggle");
+  if (!langBtn) return;
+
+  // โหลดไทยทันที
+  applyLanguage("th");
+  langBtn.textContent = "EN";
+
+  langBtn.addEventListener("click", () => {
+    const next = currentLang === "th" ? "en" : "th";
+    applyLanguage(next);
+    langBtn.textContent = next === "th" ? "EN" : "TH";
+  });
+}
+
+/* ===================== SAVE IMAGE SLIP ===================== */
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(String(fr.result || ""));
+    fr.onerror = reject;
+    fr.readAsDataURL(file);
+  });
+}
+
+/* ===================== INIT (รวมเป็นอันเดียว) ===================== */
+document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
   initSlider();
   initPopupAttach();
+  initQrPopup();
+  initLanguageToggle();
 
   const now = new Date();
   viewYear = now.getFullYear();
   viewMonth = now.getMonth();
 
+  await reloadServicesFromSheet(); // ✅ โหลดบริการจากชีทก่อน
   reloadDates();
 
   $("#prevMonth").onclick = () => {
@@ -547,96 +597,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
   $("#closePopup").onclick = closeBookingPopup;
 });
-
-function initQrPopup() {
-  const qrBtn = document.getElementById("popupQrBtn");
-  const qrModal = document.getElementById("qrModal");
-  const closeQr = document.getElementById("closeQr");
-
-  if (!qrBtn || !qrModal) return;
-
-  qrBtn.onclick = () => {
-    qrModal.classList.add("show");
-  };
-
-  closeQr.onclick = () => {
-    qrModal.classList.remove("show");
-  };
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  initQrPopup();
-});
-
-/* ===================== LANGUAGE TOGGLE ===================== */
-let currentLang = "th";
-
-const i18n = {
-  bookingFail: {
-    th: "จองคิวไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
-    en: "Booking failed. Please try again."
-  },
-  bookingSuccess: {
-    th: "จองคิวสำเร็จ",
-    en: "Booking successful"
-  },
-  bookingLoad: {
-    th: "กำลังบันทึก...",
-    en: "Booking Loading..."
-  }
-};
-
-function applyLanguage(lang) {
-  document.querySelectorAll("[data-th]").forEach((el) => {
-    el.innerHTML = el.dataset[lang];
-  });
-
-  const langBtn = document.getElementById("langToggle");
-  if (langBtn) {
-    langBtn.textContent = lang === "th" ? "EN" : "TH";
-  }
-
-  currentLang = lang;
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const langBtn = document.getElementById("langToggle");
-
-  applyLanguage("th");
-
-  if (!langBtn) return;
-
-  langBtn.addEventListener("click", () => {
-    applyLanguage(currentLang === "th" ? "en" : "th");
-  });
-});
-
-function showPopupMessage(type, text) {
-  console.log("SHOW POPUP MESSAGE:", type, text);
-
-  const box = document.getElementById("popupMessage");
-  if (!box) {
-    console.error("popupMessage not found");
-    return;
-  }
-
-  box.className = `popup-message ${type}`;
-  box.textContent = text;
-  box.classList.remove("hidden");
-}
-
-function clearPopupMessage() {
-  const box = document.getElementById("popupMessage");
-  if (!box) return;
-  box.textContent = "";
-  box.className = "popup-message hidden";
-}
-
-function fileToDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const fr = new FileReader();
-    fr.onload = () => resolve(String(fr.result || ""));
-    fr.onerror = reject;
-    fr.readAsDataURL(file);
-  });
-}
