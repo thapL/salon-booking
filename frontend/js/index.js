@@ -269,6 +269,8 @@ function openBookingPopup(dateStr) {
   selectedTime = null;
   selectedService = null;
 
+  clearPopupMessage();
+
   $("#popupDate").textContent = `วันที่ ${dateStr}`;
   $("#bookingModal").classList.add("show");
   $("#bookingModal").setAttribute("aria-hidden", "false");
@@ -282,6 +284,7 @@ function openBookingPopup(dateStr) {
 }
 
 function closeBookingPopup() {
+  clearPopupMessage();
   $("#bookingModal").classList.remove("show");
   $("#bookingModal").setAttribute("aria-hidden", "true");
 }
@@ -608,6 +611,7 @@ function fileToDataUrl(file) {
 
 /* ===================== INIT (รวมเป็นอันเดียว) ===================== */
 document.addEventListener("DOMContentLoaded", async () => {
+  clearPopupMessage();
   initTheme();
   initSlider();
   initPopupAttach();
