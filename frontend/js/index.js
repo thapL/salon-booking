@@ -30,7 +30,7 @@ const DEFAULT_SERVICES = [
     ],
   },
   {
-    category: "⚡️ ฟอก & สีพิเศษ",
+    category: "⚡️ฟอก & สีพิเศษ",
     items: [
       { id: "bleach", name: "ฟอกผม", price: 2000, note: "ติดต่อร้านก่อนจอง" },
       {
@@ -445,7 +445,6 @@ $("#confirmPopup")?.addEventListener("click", async () => {
   customerData.phone = $("#popupPhone")?.value.trim();
   customerData.email = $("#popupEmail")?.value.trim();
   customerData.notes = $("#popupNotes")?.value.trim();
-
   if (!customerData.name || !customerData.phone) {
     toast("กรุณากรอกชื่อและเบอร์โทร");
     return;
@@ -488,7 +487,7 @@ $("#confirmPopup")?.addEventListener("click", async () => {
 
     const res = await postJSON("/api/book", payload);
 
-    console.log("BOOK OK:", res);
+    // console.log("BOOK OK:", res);
     toast("บันทึกการจองเรียบร้อย");
     closeBookingPopup();
     await reloadDates();
